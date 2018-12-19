@@ -152,6 +152,11 @@ reset:
 	/* the mask ROM code should have PLL and others stable */
 #ifndef CONFIG_SKIP_LOWLEVEL_INIT
 	bl	cpu_init_cp15
+
+	/* led test */
+	bl led_asm_init
+	bl led1_on
+
 	bl	cpu_init_crit
 #endif
 
@@ -554,3 +559,20 @@ fiq:
 
 #endif /* CONFIG_USE_IRQ */
 #endif /* CONFIG_SPL_BUILD */
+led_asm_init:
+	ldr r11, =0xE0200280
+	ldr r12, =0x00001111
+	str r12, [r11]
+
+	ldr r11, =0xE0200284
+	ldr r12, =0xF			@ set LED1~LED4 off
+	str r12, [r11]
+	mov pc, lr
+
+.globl led1_on
+led1_on:
+	ldr r11, =0xE0200284
+	ldr r12, [r11]
+	bic r12, r12, #1		@ set LED1 on
+	str r12, [r11]
+	mov pc, lr
