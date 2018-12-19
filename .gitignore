@@ -15,6 +15,7 @@
 *.swp
 *.patch
 *.bin
+*.16k
 
 # Build tree
 /build-*
