@@ -461,5 +461,58 @@ uart_asm_init:
 	ldr	r1, [r0, #0x4]			@ S5PC1XX_GPIO_DAT_OFFSET
 	orr	r1, r1, #(1 << 7)		@ 7 = 7 * 1-bit
 	str	r1, [r0, #0x4]			@ S5PC1XX_GPIO_DAT_OFFSET
+	
+
+	/* init uart0 */
+	ldr r0, =0xE2900000			@ ULCON0 
+	ldr r1, =3					@ Normal mode, No parity, 1 stop bit, 8-bit data
+	str r1, [r0]
+
+	ldr r1, =0x305
+	str r1, [r0, #0x4]			@ UCON0, PCLK clock, Interrupt type: level, Receive and Transmit Mode: interrupt or polling
+
+	ldr r1, =1
+	str r1, [r0, #0x8]			@ UFCON0=0, Disable FIFO
+
+	ldr r1, =0
+	str r1, [r0, #0xC]			@ UMCON0=0, Disable Auto Flow Control, Disable MOdem interrupt, Inactivate nRTS
+
+	ldr r1, =34
+	str r1, [r0, #0x28]			@ UBRDIV0, Baud rate: 115200
+
+	ldr r1, =0xDFDD
+	str r1, [r0, #0x2C]			@ UDIVSLOT0 = 13 * 1
+
+	ldr r0, =0xE2900020			@ UTH0
+	ldr r1, =0x55				@ UTH0 = 'U'
+	str r1, [r0]
+
+	ldr r1, =0x61
+	str r1, [r0]				@ UTH0 = 'a'
+
+	ldr r1, =0x72
+	str r1, [r0]				@ UTH0 = 'r'
+
+	ldr r1, =0x74
+	str r1, [r0]				@ UTH0 = 't'
+
+	ldr r1, =0x5F
+	str r1, [r0]				@ UTH0 = '-'
+
+	ldr r1, =0x4F
+	str r1, [r0]				@ UTH0 = 'o'
+
+	ldr r1, =0x6B
+	str r1, [r0]				@ UTH0 = 'k'
+
+	ldr r1, =0x21
+	str r1, [r0]				@ UTH0 = '!'
+
+	ldr r1, =0xA
+	str r1, [r0]				@ UTH0 = '\r'
+
+	ldr r1, =0xD
+	str r1, [r0]				@ UTH0 = '\n'
+
 200:
 	mov	pc, lr
