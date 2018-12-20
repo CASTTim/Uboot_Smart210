@@ -214,6 +214,9 @@ skip_check_didle:
 	/* for UART */
 	bl	uart_asm_init
 
+	ldr r0, =0xE0000000
+	bl display_addr_dat
+
 	bl	internal_ram_init
 
 	cmp	r7, r8
@@ -516,3 +519,37 @@ uart_asm_init:
 
 200:
 	mov	pc, lr
+
+
+display_addr_dat:
+	ldr r0, [r0]
+
+	ldr r1, =0xE2900020			@ UTH0
+	
+	ldr r2, =0x30
+	str r2, [r1]				@ UTH0 = '0'
+
+	ldr r2, =0x78
+	str r2, [r1]				@ UTH0 = 'x'
+
+	ldr r3, =28
+	
+disphex_loop_cnt:
+	lsr r2, r0, r3
+	and r2, r2, #0xF
+	cmp r2, #10
+	addmi	r2, r2, #0x30		@ r2 <  10
+	addpl	r2, r2, #0x37		@ r2 >= 10
+	str r2, [r1]
+
+	sub r3, r3, #4
+	cmp r3, #0
+	bpl	disphex_loop_cnt
+
+	ldr r2, =0xA
+	str r2, [r1]				@ UTH0 = '\r'
+
+	ldr r2, =0xD
+	str r2, [r1]				@ UTH0 = '\n'
+
+	mov pc, lr
