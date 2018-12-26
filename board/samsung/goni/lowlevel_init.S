@@ -217,6 +217,17 @@ skip_check_didle:
 	ldr r0, =0xE0000000
 	bl display_addr_dat
 
+	/* for DDR */
+	bl ddrmem_init
+
+	/* test DDR */
+	//ldr r0, =0x30000000
+	ldr r0, =0x30FFFFF0
+	ldr r1, =0x12345670
+	str r1, [r0]
+	bl display_addr_dat
+
+
 	bl	internal_ram_init
 
 	cmp	r7, r8
@@ -553,3 +564,154 @@ disphex_loop_cnt:
 	str r2, [r1]				@ UTH0 = '\n'
 
 	mov pc, lr
+
+
+.globl ddrmem_init
+ddrmem_init:
+
+#define	APB_DMC_0_BASE		0xF0000000
+
+#define	DMC_CONCONTROL		0x00
+#define	DMC_MEMCONTROL		0x04
+#define	DMC_MEMCONFIG0		0x08
+#define	DMC_MEMCONFIG1		0x0C
+#define	DMC_DIRECTCMD		0x10
+#define	DMC_PRECHCONFIG		0x14
+#define	DMC_PHYCONTROL0		0x18
+#define	DMC_PHYCONTROL1		0x1C
+#define	DMC_PWRDNCONFIG		0x28
+#define	DMC_TIMINGAREF		0x30
+#define	DMC_TIMINGROW		0x34
+#define	DMC_TIMINGDATA		0x38
+#define	DMC_TIMINGPOWER		0x3C
+#define	DMC_PHYSTATUS		0x40
+
+	//step 2: Set the PhyControl0.ctrl_start_point, .ctrl_inc, .ctrl_dll_on
+	ldr	r0, =APB_DMC_0_BASE
+	ldr	r1, =0x0010100A					
+	str	r1, [r0, #DMC_PHYCONTROL0]
+	//step 3: Set the PhyControl1.ctrl_shiftc, .ctrl_offsetc
+	ldr	r1, =0x00000086					
+	str	r1, [r0, #DMC_PHYCONTROL1]
+	//step 4: PhyControl0 DLL start
+	ldr	r1, =0x0010100B
+	str	r1, [r0, #DMC_PHYCONTROL0]
+
+find_lock_val:
+	//step 11:Loop until DLL is locked
+	ldr	r1, [r0, #DMC_PHYSTATUS]			
+	and	r2, r1, #0x7
+	cmp	r2, #0x7					
+	bne	find_lock_val
+	
+	//step 12: Force Value locking
+	and	r1, #0x3fc0
+	mov	r2, r1, LSL #18
+	orr	r2, r2, #0x100000
+	orr	r2 ,r2, #0x1000
+	orr	r1, r2, #0xB					
+	str	r1, [r0, #DMC_PHYCONTROL0]
+
+	//step 5: ConControl auto refresh off
+	ldr	r1, =0x0FFF1010					
+	str	r1, [r0, #DMC_CONCONTROL]
+	//step 6: MemControl BL=4, 1 chip, DDR2 type, dynamic power down off
+	ldr	r1, =0x00202400				
+	str	r1, [r0, #DMC_MEMCONTROL]
+	//step 7: MemConfig0 512MB config, 8 banks,Mapping Method[12:15]0:linear 
+	ldr	r1, =0x20E00323				
+	str	r1, [r0, #DMC_MEMCONFIG0]
+	//step 8:PrechConfig
+	ldr	r1, =0xFF000000					
+	str	r1, [r0, #DMC_PRECHCONFIG]
+	ldr	r1, =0xFFFF00FF					
+	str	r1, [r0, #DMC_PWRDNCONFIG]
+
+	//step 9:TimingAref	7.8us//133MHz=1038(0x40E), 100MHz=780(0x30C), 20MHz=156(0x9C), 10MHz=78(0x4E)
+	ldr	r1, =0x0000040E				
+	str	r1, [r0, #DMC_TIMINGAREF]
+	//TimingRow
+	ldr	r1, =0x11122206				
+	str	r1, [r0, #DMC_TIMINGROW]
+	//TimingData
+	ldr	r1, =0x12240000				
+	str	r1, [r0, #DMC_TIMINGDATA]
+	//TimingPower
+	ldr	r1, =0x05DC0343				
+	str	r1, [r0, #DMC_TIMINGPOWER]
+
+	//step 14:DirectCmd	chip0 NOP
+	ldr	r1, =0x07000000					
+	str	r1, [r0, #DMC_DIRECTCMD]
+	//step 16:DirectCmd	chip0 PALL
+	ldr	r1, =0x01000000					
+	str	r1, [r0, #DMC_DIRECTCMD]
+	//step 17:DirectCmd	chip0 EMRS2
+	ldr	r1, =0x00020000					
+	str	r1, [r0, #DMC_DIRECTCMD]
+	//step 18:DirectCmd	chip0 EMRS3
+	ldr	r1, =0x00030000					
+	str	r1, [r0, #DMC_DIRECTCMD]
+	//step 19:DirectCmd	chip0 EMRS1 (MEM DLL on, DQS# disable)
+	ldr	r1, =0x00010000					
+	str	r1, [r0, #DMC_DIRECTCMD]
+	//step 20:DirectCmd	chip0 MRS (MEM DLL reset) CL=4, BL=4
+	ldr	r1, =0x00000542					
+	str	r1, [r0, #DMC_DIRECTCMD]
+	//step 21:DirectCmd	chip0 PALL
+	ldr	r1, =0x01000000					
+	str	r1, [r0, #DMC_DIRECTCMD]
+	//step 22:DirectCmd	chip0 REFA
+	ldr	r1, =0x05000000					
+	str	r1, [r0, #DMC_DIRECTCMD]
+	//DirectCmd	chip0 REFA
+	ldr	r1, =0x05000000					
+	str	r1, [r0, #DMC_DIRECTCMD]
+	//step 23:DirectCmd	chip0 MRS (MEM DLL unreset)
+	ldr	r1, =0x00000442					
+	str	r1, [r0, #DMC_DIRECTCMD]
+	//step 25(1):DirectCmd	chip0 EMRS1 (OCD default)
+	ldr	r1, =0x00010380					
+	str	r1, [r0, #DMC_DIRECTCMD]
+	//step 25(2)DirectCmd	chip0 EMRS1 (OCD exit)
+	ldr	r1, =0x00010000					
+	str	r1, [r0, #DMC_DIRECTCMD]
+	
+	//step 27:ConControl	auto refresh on
+	ldr	r1, =0x0FF01030					
+	str	r1, [r0, #DMC_CONCONTROL]
+	//step 28:MemControl	BL=4, 1 chip, DDR2 type, dynamic self refresh, force precharge, dynamic power down off
+	ldr	r1, =0x00202400					
+	str	r1, [r0, #DMC_MEMCONTROL]
+
+	
+	// print 'DDR-OK!' with UART
+	ldr	r0,=0xE2900020
+	ldr	r1,=0x44			@UTH0='D'
+	str	r1,[r0]
+
+	ldr	r1,=0x44
+	str	r1,[r0]				@UTH0='D'
+
+	ldr	r1,=0x52
+	str	r1,[r0]				@UTH0='R'
+
+	ldr	r1,=0x5F
+	str	r1,[r0]				@UTH0='-'
+
+	ldr	r1,=0x4F
+	str	r1,[r0]				@UTH0='O'
+
+	ldr	r1,=0x6B
+	str	r1,[r0]				@UTH0='k'
+
+	ldr	r1,=0x21
+	str	r1,[r0]				@UTH0='!'
+
+	ldr	r1,=0xA
+	str	r1,[r0]				@UTH0='\r'
+
+	ldr	r1,=0xD
+	str	r1,[r0]				@UTH0='\n'
+
+	mov	pc, lr
