@@ -164,8 +164,19 @@ reset:
 call_board_init_f:
 	ldr	sp, =(CONFIG_SYS_INIT_SP_ADDR)
 	bic	sp, sp, #7 /* 8-byte alignment for ABI compliance */
-	ldr	r0,=0x00000000
-	bl	board_init_f
+	//ldr	r0,=0x00000000
+	//bl	board_init_f
+	
+	ldr r0, =_start
+	ldr r1, _board_init_f_ofs
+
+	add lr, r0, r1
+	ldr	r0, =0x00000000
+	mov pc, lr
+
+_board_init_f_ofs:
+	.word board_init_f - _start
+
 
 /*------------------------------------------------------------------------------*/
 

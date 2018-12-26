@@ -227,6 +227,13 @@ skip_check_didle:
 	str r1, [r0]
 	bl display_addr_dat
 
+	/* for copy SD to DDR */
+	bl copy_code_to_dram
+
+	/* test */
+	ldr r0, =0x34800000
+	bl display_addr_dat
+
 
 	bl	internal_ram_init
 
