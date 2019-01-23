@@ -214,28 +214,26 @@ skip_check_didle:
 	/* for UART */
 	bl	uart_asm_init
 
+	/* test UART display */
 	ldr r0, =0xE0000000
 	bl display_addr_dat
 
 	/* for DDR */
-	bl ddrmem_init
+	bl  ddrmem_init
 
 	/* test DDR */
-	//ldr r0, =0x30000000
-	ldr r0, =0x30FFFFF0
-	ldr r1, =0x12345670
+	ldr r0, =0x30000000
+	ldr r1, =0x12345678
 	str r1, [r0]
 	bl display_addr_dat
 
-	/* for copy SD to DDR */
+	bl	internal_ram_init
+
+	/* for copy_sd_to_ddr */
 	bl copy_code_to_dram
 
-	/* test */
 	ldr r0, =0x34800000
 	bl display_addr_dat
-
-
-	bl	internal_ram_init
 
 	cmp	r7, r8
 	/* Clear wakeup status register */
@@ -392,8 +390,9 @@ system_clock_init:
 	str	r1, [r0, #0x460]		@ S5PC110_CLK_IP0
 
 	/* CLK_IP1 */
-	ldr	r1, =0xe9fdf0f9			@ FIMD[0] USBOTG[16]
-						@ NANDXL[24]
+	/* ldr	r1, =0xe9fdf0f9			@ FIMD[0] USBOTG[16] */
+	ldr	r1, =0xedfdf0f9			@ SROMC[26] FIMD[0] USBOTG[16] 
+								@ NANDXL[24]
 	str	r1, [r0, #0x464]		@ S5PC110_CLK_IP1
 
 	/* CLK_IP2 */
@@ -482,29 +481,28 @@ uart_asm_init:
 	ldr	r1, [r0, #0x4]			@ S5PC1XX_GPIO_DAT_OFFSET
 	orr	r1, r1, #(1 << 7)		@ 7 = 7 * 1-bit
 	str	r1, [r0, #0x4]			@ S5PC1XX_GPIO_DAT_OFFSET
-	
 
-	/* init uart0 */
-	ldr r0, =0xE2900000			@ ULCON0 
-	ldr r1, =3					@ Normal mode, No parity, 1 stop bit, 8-bit data
-	str r1, [r0]
+	/* UART0 */
+	ldr r0, =0xE2900000
+	ldr r1, =3					@ 8-bit
+	str r1, [r0]				@ ULCON0 = 3
 
 	ldr r1, =0x305
-	str r1, [r0, #0x4]			@ UCON0, PCLK clock, Interrupt type: level, Receive and Transmit Mode: interrupt or polling
+	str r1, [r0, #0x4]			@ UCON0 = 0x305
 
 	ldr r1, =1
-	str r1, [r0, #0x8]			@ UFCON0=0, Disable FIFO
+	str r1, [r0, #0x8]			@ UFCON0 = 0
 
 	ldr r1, =0
-	str r1, [r0, #0xC]			@ UMCON0=0, Disable Auto Flow Control, Disable MOdem interrupt, Inactivate nRTS
+	str r1, [r0, #0xC]			@ UMCON0=0
 
 	ldr r1, =34
-	str r1, [r0, #0x28]			@ UBRDIV0, Baud rate: 115200
+	str r1, [r0, #0x28]			@ UBRDIV0 = 34
 
 	ldr r1, =0xDFDD
-	str r1, [r0, #0x2C]			@ UDIVSLOT0 = 13 * 1
-
-	ldr r0, =0xE2900020			@ UTH0
+	str r1, [r0, #0x2C]			@ UDIVSLOT0 = 13 x 1
+	
+	ldr r0, =0xE2900020
 	ldr r1, =0x55				@ UTH0 = 'U'
 	str r1, [r0]
 
@@ -542,37 +540,37 @@ uart_asm_init:
 display_addr_dat:
 	ldr r0, [r0]
 
-	ldr r1, =0xE2900020			@ UTH0
+	ldr r1, =0xE2900020			@ UART0 buffer
 	
 	ldr r2, =0x30
-	str r2, [r1]				@ UTH0 = '0'
+	str r2, [r1]				@ UTH0='0'
 
 	ldr r2, =0x78
-	str r2, [r1]				@ UTH0 = 'x'
+	str r2, [r1]				@ UTH0='x'
 
 	ldr r3, =28
-	
+
+/* display data in r0 */
 disphex_loop_cnt:
-	lsr r2, r0, r3
+	lsr r2, r0, r3				
 	and r2, r2, #0xF
 	cmp r2, #10
-	addmi	r2, r2, #0x30		@ r2 <  10
-	addpl	r2, r2, #0x37		@ r2 >= 10
+	addmi r2, r2, #0x30			@ < 10
+	addpl r2, r2, #0x37			@ > 10
 	str r2, [r1]
 
 	sub r3, r3, #4
 	cmp r3, #0
-	bpl	disphex_loop_cnt
+	bpl disphex_loop_cnt
 
 	ldr r2, =0xA
 	str r2, [r1]				@ UTH0 = '\r'
-
+	
 	ldr r2, =0xD
 	str r2, [r1]				@ UTH0 = '\n'
 
 	mov pc, lr
-
-
+	
 .globl ddrmem_init
 ddrmem_init:
 
@@ -601,7 +599,7 @@ ddrmem_init:
 	ldr	r1, =0x00000086					
 	str	r1, [r0, #DMC_PHYCONTROL1]
 	//step 4: PhyControl0 DLL start
-	ldr	r1, =0x0010100B
+	ldr	r1, =0x0010100B					
 	str	r1, [r0, #DMC_PHYCONTROL0]
 
 find_lock_val:
@@ -692,7 +690,6 @@ find_lock_val:
 	str	r1, [r0, #DMC_MEMCONTROL]
 
 	
-	// print 'DDR-OK!' with UART
 	ldr	r0,=0xE2900020
 	ldr	r1,=0x44			@UTH0='D'
 	str	r1,[r0]

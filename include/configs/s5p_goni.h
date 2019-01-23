@@ -59,6 +59,7 @@
 /*
  * select serial console configuration
  */
+//#define CONFIG_SERIAL2			1	/* use SERIAL2 */
 #define CONFIG_SERIAL0			1	/* use SERIAL0 */
 #define CONFIG_SERIAL_MULTI		1
 #define CONFIG_BAUDRATE			115200
@@ -80,7 +81,7 @@
 
 #undef CONFIG_CMD_FPGA
 #undef CONFIG_CMD_MISC
-#undef CONFIG_CMD_NET
+//#undef CONFIG_CMD_NET
 #undef CONFIG_CMD_NFS
 #undef CONFIG_CMD_XIMG
 #define CONFIG_CMD_CACHE
@@ -190,9 +191,11 @@
 
 #define CONFIG_SYS_HZ			1000
 
-/* Smart210 has 1 banks of DRAM, but swap the bank */
+/* Goni has 3 banks of DRAM, but swap the bank */
+//#define CONFIG_NR_DRAM_BANKS	3
 #define CONFIG_NR_DRAM_BANKS	1
 #define PHYS_SDRAM_1		CONFIG_SYS_SDRAM_BASE	/* OneDRAM Bank #0 */
+//#define PHYS_SDRAM_1_SIZE	(80 << 20)		/* 80 MB in Bank #0 */
 #define PHYS_SDRAM_1_SIZE	(512 << 20)		/* 512 MB in Bank #0 */
 //#define PHYS_SDRAM_2		0x40000000		/* mDDR DMC1 Bank #1 */
 //#define PHYS_SDRAM_2_SIZE	(256 << 20)		/* 256 MB in Bank #1 */
@@ -204,7 +207,7 @@
 
 /* FLASH and environment organization */
 //#define CONFIG_ENV_IS_IN_ONENAND	1
-#define CONFIG_ENV_IS_NOWHERE		1
+#define CONFIG_ENV_IS_NOWHERE	1
 #define CONFIG_ENV_SIZE			(256 << 10)	/* 256 KiB, 0x40000 */
 #define CONFIG_ENV_ADDR			(1 << 20)	/* 1 MB, 0x100000 */
 
@@ -236,5 +239,19 @@
 #define CONFIG_USB_GADGET
 #define CONFIG_USB_GADGET_S3C_UDC_OTG
 #define CONFIG_USB_GADGET_DUALSPEED
+
+/*
+ * Ethernet Contoller driver
+ */
+#ifdef CONFIG_CMD_NET
+#define CONFIG_DM9000		   1       /* we have a DM9000 on-board   */
+#define CONFIG_DRIVER_DM9000
+#define CONFIG_DM9000_NO_SROM
+#define CONFIG_ENV_SROM_BANK   1       /* Select SROM Bank-1 for Ethernet*/
+#define CONFIG_DM9000_BASE 0X88000000
+#define DM9000_IO (CONFIG_DM9000_BASE)
+#define DM9000_DATA (CONFIG_DM9000_BASE + 0x4) 
+#define CONFIG_CMD_PING
+#endif /* CONFIG_CMD_NET */
 
 #endif	/* __CONFIG_H */
