@@ -58,6 +58,8 @@ lowlevel_init:
 	cmp	r0, r5
 	beq	100f
 	ldr	r8, =S5PC110_GPIO_BASE
+
+	bl system_clock_init
 100:
 	/* Turn on KEY_LED_ON [GPJ4(1)] XMSMWEN */
 	cmp	r7, r8
@@ -343,7 +345,8 @@ system_clock_init:
 	ldr	r0, =S5PC110_CLOCK_BASE		@ 0xE0100000
 
 	/* Set Clock divider */
-	ldr	r1, =0x14131330			@ 1:1:4:4, 1:4:5
+	/* ldr	r1, =0x14131330			@ 1:1:4:4, 1:4:5 */
+	ldr	r1, =0x14131430			
 	str	r1, [r0, #0x300]
 	ldr	r1, =0x11110111			@ UART[3210]: MMC[3210]
 	str	r1, [r0, #0x310]
@@ -357,7 +360,8 @@ system_clock_init:
 	str	r1, [r0, #0x020]		@ S5PC110_VPLL_LOCK
 
 	/* S5PC110_APLL_CON */
-	ldr	r1, =0x80C80601			@ 800MHz
+	/* ldr	r1, =0x80C80601			@ 800MHz */
+	ldr	r1, =0x807D0301			@ 1000MHz
 	str	r1, [r0, #0x100]
 	/* S5PC110_MPLL_CON */
 	ldr	r1, =0x829B0C01			@ 667MHz
