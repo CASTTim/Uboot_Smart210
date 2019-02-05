@@ -28,7 +28,9 @@ include $(TOPDIR)/config.mk
 
 LIB	= $(obj)lib$(BOARD).o
 
-COBJS-y	:= goni.o onenand.o mmc_relocate.o
+#COBJS-y	:= goni.o onenand.o mmc_relocate.o
+COBJS-y	:= goni.o mmc_relocate.o
+#COBJS-y	:= goni.o mmc_relocate.o
 SOBJS	:= lowlevel_init.o
 
 SRCS    := $(SOBJS:.o=.S) $(COBJS-y:.o=.c)

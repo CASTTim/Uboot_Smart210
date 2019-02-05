@@ -395,9 +395,9 @@ system_clock_init:
 
 	/* CLK_IP1 */
 	/* ldr	r1, =0xe9fdf0f9			@ FIMD[0] USBOTG[16] */
-	ldr	r1, =0xedfdf0f9			@ SROMC[26] FIMD[0] USBOTG[16] 
+	ldr	r1, =0xfffdf0fb			@ SROMC[26] FIMD[0] USBOTG[16] 
 								@ NANDXL[24]
-	str	r1, [r0, #0x464]		@ S5PC110_CLK_IP1
+	str	r1, [r0, #0x464]		@ S5PC110_CLK_IP1 
 
 	/* CLK_IP2 */
 	ldr	r1, =0xf75f7fc			@ CORESIGHT[8] MODEM[9]

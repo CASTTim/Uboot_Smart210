@@ -17,8 +17,9 @@ void copy_code_to_dram(void)
 	{
 		// 0: channel 0
 		// 49: secter number, 1 sector = 512 bytes
-		ret = copy_bl2(0, sec_no,       128, (unsigned int *)dest, 0);
-		ret = copy_bl2(0, sec_no + 128, 128, (unsigned int *)(dest + 0x10000), 0);
-		ret = copy_bl2(0, sec_no + 256, 128, (unsigned int *)(dest + 0x20000), 0);
+		ret = copy_bl2(0, sec_no,       128, (unsigned int *)dest, 0);					// 64K
+		ret = copy_bl2(0, sec_no + 128, 128, (unsigned int *)(dest + 0x10000), 0);		// 128K
+		ret = copy_bl2(0, sec_no + 256, 128, (unsigned int *)(dest + 0x20000), 0);		// 192K
+		ret = copy_bl2(0, sec_no + 384, 128, (unsigned int *)(dest + 0x30000), 0);		// 256K
 	}
 }

@@ -296,11 +296,15 @@ void board_init_f(ulong bootflag)
 	gd->fdt_blob = (void *)getenv_ulong("fdtcontroladdr", 16,
 						(uintptr_t)gd->fdt_blob);
 
+	led2_on();
+
 	for (init_fnc_ptr = init_sequence; *init_fnc_ptr; ++init_fnc_ptr) {
 		if ((*init_fnc_ptr)() != 0) {
 			hang ();
 		}
 	}
+
+	led3_on();
 
 #ifdef CONFIG_OF_CONTROL
 	/* For now, put this check after the console is ready */

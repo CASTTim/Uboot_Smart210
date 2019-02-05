@@ -587,3 +587,27 @@ led1_on:
 	bic r12, r12, #1		@ set LED1 on
 	str r12, [r11]
 	mov pc, lr
+
+.globl led2_on
+led2_on:
+	ldr r11, =0xE0200284
+	ldr r12, [r11]
+	bic r12, r12, #2		@ set LED2 on
+	str r12, [r11]
+	mov pc, lr
+
+.globl led3_on
+led3_on:
+	ldr r11, =0xE0200284
+	ldr r12, [r11]
+	bic r12, r12, #4		@ set LED3 on
+	str r12, [r11]
+	mov pc, lr
+
+.globl led4_on
+led4_on:
+	ldr r11, =0xE0200284
+	ldr r12, [r11]
+	bic r12, r12, #8		@ set LED4 on
+	str r12, [r11]
+	mov pc, lr

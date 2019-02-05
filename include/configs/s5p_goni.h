@@ -87,6 +87,8 @@
 #define CONFIG_CMD_CACHE
 #define CONFIG_CMD_REGINFO
 //#define CONFIG_CMD_ONENAND
+#undef CONFIG_CMD_ONENAND
+#define CONFIG_CMD_NAND
 #define CONFIG_CMD_MTDPARTS
 #define CONFIG_CMD_MMC
 
@@ -97,6 +99,7 @@
 #define CONFIG_MTD_PARTITIONS
 
 /* Actual modem binary size is 16MiB. Add 2MiB for bad block handling */
+#ifdef CONFIG_CMD_ONENAND
 #define MTDIDS_DEFAULT		"onenand0=samsung-onenand"
 #define MTDPARTS_DEFAULT	"mtdparts=samsung-onenand:1m(bootloader)"\
 				",256k(params)"\
@@ -107,6 +110,15 @@
 				",12m(modem)"\
 				",60m(qboot)"\
 				",-(UBI)\0"
+#endif
+
+#ifdef CONFIG_CMD_NAND
+#define MTDIDS_DEFAULT		"nand0=s5p-nand"
+#define MTDPARTS_DEFAULT	"mtdparts=s5p-nand:256k(bootloader)"\
+				",128k@0x40000(params)"\
+				",7m@0x80000(kernel)"\
+				",-(rootfs)\0"
+#endif
 
 #define NORMAL_MTDPARTS_DEFAULT MTDPARTS_DEFAULT
 
@@ -206,14 +218,26 @@
 #define CONFIG_SYS_MONITOR_LEN		(256 << 10)	/* 256 KiB */
 
 /* FLASH and environment organization */
+//#define CONFIG_ENV_IS_NOWHERE	1
+#ifdef CONFIG_CMD_ONENAND
 //#define CONFIG_ENV_IS_IN_ONENAND	1
-#define CONFIG_ENV_IS_NOWHERE	1
-#define CONFIG_ENV_SIZE			(256 << 10)	/* 256 KiB, 0x40000 */
-#define CONFIG_ENV_ADDR			(1 << 20)	/* 1 MB, 0x100000 */
-
 #define CONFIG_USE_ONENAND_BOARD_INIT
 #define CONFIG_SAMSUNG_ONENAND		1
 #define CONFIG_SYS_ONENAND_BASE		0xB0000000
+#endif
+
+#ifdef CONFIG_CMD_NAND
+#define CONFIG_ENV_IS_IN_NAND	1
+#define CONFIG_SYS_MAX_NAND_DEVICE 	1
+#define CONFIG_SYS_NAND_BASE		0xB0E00000
+#define CONFIG_NAND_S5PC110		
+#endif
+
+//#define CONFIG_ENV_SIZE			(256 << 10)	/* 256 KiB, 0x40000 */
+//#define CONFIG_ENV_ADDR			(1 << 20)	/* 1 MB, 0x100000 */
+#define CONFIG_ENV_SIZE			(128 << 10)		/* 256K, 0x40000 */	
+//#define CONFIG_ENV_ADDR			(256 << 10)		/* 256K, 0x40000 */	
+#define CONFIG_ENV_OFFSET		(256 << 10)		/* 256K, 0x40000 */	
 
 #define CONFIG_DOS_PARTITION		1
 
